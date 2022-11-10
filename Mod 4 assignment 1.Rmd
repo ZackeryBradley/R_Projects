@@ -1,0 +1,104 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+# **Module 4- Assignment 1**
+## **Bradley, Zackery**
+### **Data Transformation**
+
+```{r}
+library(tidyverse)
+library(readr)
+state_income <- read_csv("C:/Users/bradl/OneDrive/Desktop/MODULE 2/Module 4/state_income.csv")
+```
+#==Part 1
+
+####**State Incomes**
+#I will be creating a subset from the state_income dataset. The columns that will be included are state_name, state_ab, county, city, type, Aland, mean, median, and stdev.
+
+#==Question 5-9
+
+```{r Question 5-9}
+State_income2 <- select(state_income, State_Name,State_ab,County,City,Type,ALand,Mean,Median,Stdev)
+State_income2 <- select(State_income2,State_ab, everything())
+head(State_income2[,1:9], 10)
+```
+#==Question 10-11
+
+```{r Question 10-11}
+State_income2 <- rename(State_income2,SquareArea=ALand,Incomemean=Mean,IncomeMedian=Median,IncomeStDev=Stdev)
+head(State_income2[,1:9], 10)
+```
+#==Question 12-13
+
+```{r Question 12-13}
+NC_income<- filter(State_income2,State_Name=="North Carolina")
+head(NC_income[,1:9], 10)
+```
+#==Question14
+#==Part 2
+#### **NC Incomes**
+
+#==Question15
+#I will be using the NC_income dataset to create summaries of the incomes within North Carolina including summaries by county, city and type.
+
+#==Question 16
+
+```{r  q16}
+arrange(NC_income,County)
+head(NC_income[,1:9], 10)
+```
+#==Question 18
+
+
+```{r q18}
+summary1 <- group_by(NC_income,County) 
+summary1 <- summarise (summary1, mean= mean(Incomemean))
+summary2 <- NC_income %>%
+ group_by(City) %>%
+ summarise (mean = mean(Incomemean))
+```
+
+#==Question 20
+ 
+#both summary 1 and 2 group the NC_income dataset by county and city and also summarize the both groups by Incomemean.
+
+#==Question 21
+
+```{r q21}
+summary3 <- group_by(NC_income,Type) 
+summary3 <- summarise(summary3, mean=mean(Incomemean))
+```
+#== Question 22
+#==Part 3
+
+#### **Income Visualization**
+
+#==Question 23
+
+```{r q23}
+ggplot(data = summary1, aes(x=County, y=mean))+
+geom_point()+
+ylab("income")+
+theme(axis.text.x = element_text(angle = 90,vjust =0.5, hjust=1))
+```
+#== Question 25
+
+#The county with the highest average income is Wake County, with 106,139.The county with the lowest income is Stokes County with 28,921.50. The second lowest incomes is Surry County with 31,455.
+
+#==Question 26
+
+```{r q26}
+AvgStateIncome<- group_by(State_income2,State_ab) 
+AvgStateIncome<- summarise (AvgStateIncome, mean= mean(Incomemean))
+AvgStateIncome <- filter(AvgStateIncome,grepl("N",State_ab))
+ggplot(data = AvgStateIncome, aes(x=State_ab, y=mean))+
+geom_point()
+```
+
+#==Question 29
+
+#The smallest average income from our data is Tennessee (TN) with an avwerage income of 56,271.95. The largest average income from our data belongs to New Jersey (NJ) with an average total of 88,657.64.
+
+

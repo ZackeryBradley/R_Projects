@@ -1,0 +1,123 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+# **Module 6 - Assignment 2**
+## **Bradley, Zackery**
+### **Statistical Analyses**
+
+```{r}
+library(tidyverse)
+library(corrplot)
+library(readxl)
+RespiratoryExchangeSample <- read_excel("C:/Users/bradl/OneDrive/Desktop/MODULE 2/modul 6/RespiratoryExchangeSample.xlsx")
+Advertising <- read_csv("C:/Users/bradl/OneDrive/Desktop/MODULE 2/modul 6/Advertising.csv")
+Insurance <- read_csv("C:/Users/bradl/OneDrive/Desktop/MODULE 2/modul 6/Insurance.csv")
+Perceptions <- read_excel("C:/Users/bradl/OneDrive/Desktop/MODULE 2/modul 6/Perceptions.xlsx")
+
+```
+#==part 2
+
+#==Question 13-22
+
+## **Regression and Correlation**
+
+#Regression analysis is a statistical method that allows you to examine the relationship between two or more variables of interest. Correlation analysis is a method of statistical evaluation used to study the strength of a relationship between two, numerically measured, continuous variables (e.g. height and weight). This particular type of analysis is useful when a researcher wants to establish if there are possible connections between variables.
+
+## **Insurance Costs**
+#We would like to determine if we can accurately predict insurance costs based upon the factors included in the data. We would also like to know if there are any connections between variables (for example, is age connected or correlated to charges).
+
+### **Correlations of bmi, age, children and cost**
+
+```{r}
+Insurance2 <- select(Insurance, age, bmi, children, charges)
+cor(Insurance2)
+library(corrplot)
+library(RColorBrewer)
+Corr_matrix <- (cor(Insurance2))
+corrplot(Corr_matrix, type="upper", order="hclust",
+ col=brewer.pal(n=8, name="RdYlBu"))
+
+```
+#This results dictate the relationship between the variables.we can find strong correlations in children to age, children to bmi, and children to charges.
+
+#==Question 23-25
+
+# **Regression Analysis**
+
+```{r}
+Insurance2 <- lm(Insurance$charges  ~ Insurance$bmi + Insurance$age + Insurance$children)
+summary(Insurance2)
+```
+#According to the P value from the linear regression, all the variables tested show a strong relationship to charges.
+#==question 26-27
+
+```{r}
+Insurance <- mutate(Insurance, gender=ifelse(sex=="female",1,0))
+Smoker2<- mutate(Insurance,ifelse(smoker=="yes",1,0))
+smoker2 <- lm(Insurance$charges  ~ Insurance$bmi + Insurance$age + Insurance$children + Insurance$gender)
+summary(smoker2)
+```
+#from the regression, it seems that gender and smoking do have an impact on cost.
+#==part 3
+
+#==question 28-34
+
+## **Group Comparisons with t-tests**
+
+#The t-test is used to compare the values of the means from two samples and test whether it is likely that thesamples are from populations having different mean values. This is often used to compare 2 groups to see if there are any significant differences between these groups.
+
+## ** Caffeine Impacts on Respiratory Exchange Ratio**
+
+#A study of the effect of caffeine on muscle metabolism used volunteers who each underwent arm exercise tests. Half the participants were randomly selected to take a capsule containing pure caffeine one hour before the test. The other participants received a placebo capsule. During each exercise the subject's respiratory exchange ratio (RER) was measured. (RER is the ratio of CO2 produced to O2 consumed and is an indicator of whether energy is being obtained from carbohydrates or fats).The question you are trying to answer is whether caffeine impacts RER during exercise.
+
+```{r}
+summary(RespiratoryExchangeSample)
+t.test(RespiratoryExchangeSample$Caffeine,RespiratoryExchangeSample$Placebo)
+```
+#given that the P-value is <= .05, one could say that there is a significant relationship witj Caffeine, and Placebo
+
+#==Question 35-39
+
+# **Impact of Advertising**
+
+#You are a marketing researcher conducting a study to understand the impact of a new marketing campaign. To test the new advertisements, you conduct a study to understand how consumers will respond based on see the new ad compared to the previous campaign. One group will see the new ad and one group will see the older ads. They will then rate the ad on a scale of 0 to 100 as a percentage of purchase likelihood based on the ad.The question you are trying to answer is whether to roll out the new campaign or stick with the current campaign.
+
+```{r}
+summary(Advertising)
+t.test(Rating ~ Group, Advertising, var.equal=TRUE)
+Advertising<- mutate(Insurance,ifelse(smoker=="yes",1,0))
+
+```
+#given the rating from the student t-test, there is no signifigance between the groups.
+#==part 4
+
+#==Question 40-49
+
+# **ANOVA**
+
+#An ANOVA test is a way to find out if survey or experiment results are significant. In other words, they help you to figure out if you need to reject the null hypothesis or accept the alternate hypothesis. Basically, you’re testing groups to see if there’s a difference between them. Examples of when you might want to test different groups:
+#-A group of psychiatric patients are trying three different therapies: counseling, medication and biofeedback. You want to see if one therapy is better than the others.
+#- A manufacturer has two different processes to make light bulbs. They want to know if one process is better than the other.
+#- Students from different colleges take the same exam. You want to see if one college outperforms the other.
+
+# **Perceptions of Social Media Profiles**
+
+#This study examines how certain information presented on a social media site might influence perceptions of trust, connectedness and knowledge of the profile owner. Specifically, participants were shown weak, average and strong arguments that would influence their perceptions of the above variables. Using the dataset provided, the following code runs an ANOVA with post-hoc analyses to understand argument strength impacts on perceptions.
+
+```{r}
+Anova1 <- aov(Trust  ~ Argument, data=Perceptions)
+summary(Anova1)
+Anova2 <- aov(Connectedness  ~ Argument, data=Perceptions)
+summary(Anova2)
+Anova3 <- aov( Knowledge ~ Argument, data=Perceptions)
+summary(Anova3)
+TukeyHSD(Anova1)
+TukeyHSD(Anova2)
+TukeyHSD(Anova3)
+```
+#Anova1 and Anova2 shows signifigance. now looking back, none of the tested columns show a strong relationship.
+
+
+

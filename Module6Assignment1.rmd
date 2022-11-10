@@ -1,0 +1,72 @@
+---
+output:
+  word_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: inline
+---
+# **Module 6 -Assignment 1**
+## **Bradley Zackery**
+### **Lubridate**
+
+```{r}
+library(tidyverse)
+library(dbplyr)
+library(lubridate)
+library(readr)
+Appointments <- read_csv("C:/Users/bradl/OneDrive/Desktop/MODULE 2/modul 6/Appointments.csv")
+
+```
+#==Part 2
+
+#==Question 11-15
+
+# **Working With Dates**
+
+```{r}
+Appointments <- Appointments %>%
+
+mutate(ReservationYear='2019') %>%
+
+mutate(ReservationDate = make_date(month=ReservationMonth, day=ReservationDay, year=ReservationYear)) %>%
+
+  mutate(CreationDate = make_date(month=CreationMonth, day=CreationDay, year=CreationYear)) 
+  
+    Appointments$ReservationSpan <- (Appointments$ReservationDate-Appointments$CreationDate)
+
+
+```
+#==part 3
+
+#==Question 16-22
+
+# **Exploratory Analysis**
+
+```{r}
+summary(Appointments)
+
+Appointments$ReservationSpan<- as.numeric(Appointments$ReservationSpan)
+
+summary(Appointments)
+
+  
+cor(Appointments$ReservationSpan,Appointments$Show)
+
+
+ggplot(data = Appointments, aes("show"))+
+geom_bar()
+```
+#a. What is the average time between appointment creation and the actual reservation date? 38.53
+#b. What was the max time? 207
+#c. What was the min time? 1
+
+#a. Are ReservationSpan and Show highly correlated? No
+
+#a. Based on 0 being “no show” and 1 being “show”, did most people make their appointments? Yes, most people made their appointments.
+
+
+
+
+
+
+

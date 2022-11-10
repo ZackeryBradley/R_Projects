@@ -1,0 +1,29 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+#  Module 2 - Assignment 2
+## Bradley, Zackery
+### Introduction to R Markdown
+
+#==Question  2
+#This document will represent practicing with R markdown. Previously, we learned about Vectors, as well as learning about how different data types are written.this\will be the first time I have ever practiced with R Markdown.
+
+#==question 3
+#In this document, we will be revisiting some of the material from Module 1 Assignment 2, which will include a basic plot showing sales over the last six months. We are inserting this by creating a Chunk. Chunks can be used as a means to render output such as plots.
+
+```{r Plot Of Sales by Month}
+library(tidyverse)
+```
+  #==Question 11
+#Reflecting back on Module 1, assignment 2, we recorded the largest sales month by selling a total of 300 in month 5.
+  
+  #==Question 12
+```{r Working with Data Frames}
+Yearly_Sales <- data.frame(Month = c("JAN","FEB","MAR","APR","MAY","JUNE","JULY","AUG","SEPT","OCT","NOV","DEC"),
+Sales = c(150.25,258.4,268.55,122.52,987,458.82,667.23,845.54,586.78,888.58,756.12,456.84))
+```
+#==Question 15
+#In module 1 assignment 2, we determined that May had the most sales, while the month of April had the least,
+

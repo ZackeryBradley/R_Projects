@@ -1,0 +1,89 @@
+---
+title: "More R Markdown"
+author: "Zackery Bradley"
+date: "7/5/2021"
+output: word_document
+---
+#== Question 1 part 5
+<!--
+Date Created: Use today’s date in 2021-07-05 format
+Description: Add a few sentences that includes what the program is doing, files you plan to use, where you 
+got them, etc. For this project, add the following text under description:
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS 
+Word documents. The following is just a sample of some of the things you can do with R Markdown.
+Modified: 
+This will not have anything now but will be useful if you make changes in the future to a document. For this 
+project, put today’s date (in 2021-07-05 format) and type created 
+-->
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#==Question 2
+
+## R Markdown Coding Tips
+
+* [Github](https://github.com)
+* [stackOverflow](https://www.stackoverflow.com)
+* [Reddit](https://www.Reddit.com)
+
+### **Chunks of Code**
+
+**Options include**:
+
+* **eval = FALSE** prevents the code from being evaluate (not run and no output created) this is useful if you want to stop a chunk of code from running but you will probably not use this in the course.
+
+* **include = FALSE** runs the code, but doesn’t show the code or results in the final document. 
+Use for setup code that you don’t want cluttering your report.
+* **echo = FALSE** prevents code (but not results) from appearing in the finished report. Useful 
+when presenting to management so the code doesn’t show on report.
+* **message = FALSE or warning = FALSE** prevents messages or warnings from appearing in the 
+output file
+* **results = ‘hide’** hides printed output.
+* **fig.show = ‘hide’** hides plots.
+* **error = TRUE** causes the render to continue even if the code returns an error (rarely used).
+
+#==Question 2 part 6
+
+### **Packages and Data Imports in R**
+
+#==Question 2 part 7
+
+A few tips when working with packages in Markdown include:
+
+* Don't install a package in your Markdown file. This will install the package everytime the file is knit. to load new packages, do this in the console outside of the Markdown file.
+- If a new package does need to be installed, include this in the comments at the top of your R Markdown file.
+- If a new package does need to be installed, include this in the comments at the top of your R 
+Markdown file.
++ You only need to load the library once in the Markdown file. So, if you are using tidyverse, you 
+will only have library(tidyverse) included once at the beginning.
+* When you load some packages, they actually have multiple packages included in the load. For 
+example, when you load tidyverse, this will load ggplot2, dplyr, tidyr, readr, etc.
+
+#==Question 2 part 8
+
+### **Examples**
+
+#==question 2 part 9
+
+For this project, we will be using the tidyverse which you just installed in a previous assignment. 
+Remember that when you load a package in R, it will remain loaded throughout the program (you 
+don’t need to continually load the package).
+Below is an example of loading the package and importing the data:
+
+#==question 2 part 10
+
+```{r **packages**}
+library(tidyverse)
+library(readr)
+US_Population_1_ <- read_csv("C:/Users/bradl/OneDrive/Desktop/US_Population (1).csv")
+```
+
+
+
+
+
+
+
+
+

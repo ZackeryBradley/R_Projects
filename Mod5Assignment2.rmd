@@ -1,0 +1,65 @@
+---
+output:
+  html_document: default
+  word_document: default
+---
+# **Module 5 - Assignment 2** 
+## **Bradley, Zackery**
+### **More Data Wrangling**
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(readr)
+tuition_cost <- read_csv("C:/Users/bradl/OneDrive/Desktop/MODULE 2/Model 5/tuition_cost.csv")
+```
+### Part 1 -  Creating tidy data using tidyr
+
+```{r}
+Tuition <- pivot_longer(tuition_cost,c("2017", "2018", "2019", "2020"),names_to = "year", values_to = "tuition")
+Tuition <- separate(Tuition,tuition, into = c("Instate", "Outstate"),sep = '/', convert =  TRUE)
+```
+#==Part 2
+
+#==Question 13
+ 
+### Part 2 - **North Carolina Schools**
+
+```{r}
+
+Public <- filter(Tuition,state == "North Carolina" & type=="Public" & degree_length == "4 Year")
+ggplot(data = Public, aes(x = year, y= Instate, color= name))+
+geom_point()+
+ggtitle("In State Tuition for North Carolina Schools")+
+labs(x="year", y= "cost in $")+
+theme(legend.title=element_blank())
+
+UNC <- filter(Public,grepl("University of North Carolina",name))
+ggplot(data = UNC,mapping = aes(x = year, y = Instate, color=name))+
+geom_point()+
+ggtitle("In State Tuition for UNC Schools")+
+theme(legend.title=element_blank())+
+theme(legend.position="bottom") +
+labs(x="year", y= "cost in $")+
+guides(colour = guide_legend(nrow = 4))
+
+```
+### **Part 3 - **Additional Universities**
+
+```{r}
+Public1 <- filter(Tuition,state == "Colorado" & type=="Public" & degree_length == "4 Year")
+ggplot(data = Public1, aes(x = year, y= Outstate, color= name))+
+geom_point()+
+ggtitle("Outstate Tuition for Colorado Schools")+
+labs(x="year", y= "cost in $")+
+theme(legend.title=element_blank())
+
+Public2 <- filter(Tuition,state == "South Carolina" & type=="Public" & degree_length == "2 Year")
+ggplot(data = Public2, aes(x = year, y= Outstate, color= name))+
+geom_point()+
+ggtitle("Oustate Tuition for South Carolina Schools")+
+labs(x="year", y= "cost in $")+
+theme(legend.title=element_blank())+
+theme(legend.position="bottom") 
+```
+

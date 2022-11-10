@@ -1,0 +1,63 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+# **Module 3 - Assignment 1**
+## **Bradley, Zackery**
+### **Data Visualization**
+
+#I will be using the datasets containing candy rasnkings and prodution. These datasets can be found in canvas.
+```{r Packages}
+library(tidyverse)
+candy_data_1_<- read_csv("candy_data_1_.csv")
+candy_production <- read_csv("candy_production.csv")
+```
+#== Part 2
+
+#### **Visualization with Scatterplots (geom_point)**
+```{r}
+ggplot(data=candy_data_1_,aes(x= sugarpercent, y = pricepercent, label = competitorname))+
+geom_point()+
+geom_smooth(method ="lm")+
+geom_text(check_overlap = T, 
+vjust = "bottom", 
+nudge_y = 0.01, 
+angle = 30,
+size = 2)+
+labs(title ="Sugar by Price Scatterplot",
+x = "Sugar content (percentile)", 
+y = "Price (percentile)" 
+ )
+```
+summary(candy_data_1_)
+
+#the candy with the lowest price and highest sugar content is "Dum Dums". The candy with the highest price and highest sugar content is "milkyway simply caramel".
+#== part 3
+
+#### **Line Chart of Candy Production**
+
+#we will be displaying a line chart showing the candy production for specific date and how production during that month is compared to 2012
+```{r line chart}
+ggplot(data = candy_production,aes(x=observation_date,y=IPG3113N, group=1))+
+geom_line()+
+geom_smooth(method =)+
+labs(title ="Monthly Candy Production",
+x = "Year", 
+y = "As Percent of 2012 Production")
+```
+
+
+#==Part 4
+
+#### **Bar Chart of Ingredients**
+```{r Bar Chart}
+ggplot(data = candy_data_1_, aes(chocolate))+
+geom_bar()
+candyFeatures <-candy_data %>% select(2:10)
+candyFeatures[] <-lapply(candyFeatures,as.logical)
+ggplot(data = candyFeatures, aes(chocolate))+
+geom_bar()
+```
+
+

@@ -1,0 +1,71 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+
+# Module 4 - Assignment 2
+## Bradley, Zackery
+### **Data Cleansing**
+
+```{r}
+library(tidyverse)
+library(readxl)
+CustomerChurn <- read_excel("MODULE 2/Module 4/CustomerChurn.xlsx", 
+    col_types = c("text", "text", "text", 
+        "text", "numeric", "text", "text", 
+        "text", "text", "text", "text", "text", 
+        "text", "text", "text", "text", "text", 
+        "numeric", "numeric", "text"))
+```
+#==Part 1
+#==Question 1
+
+#### **Cleaning Missing Data**
+
+#==Question 4-9
+
+
+```{r Part1}
+summary(CustomerChurn)
+
+CustomerChurn2 <- mutate(CustomerChurn,MonthlyCharges = replace(MonthlyCharges, 
+is.nan(MonthlyCharges), median(MonthlyCharges, na.rm = TRUE)))
+
+CustomerChurn2 <- mutate(CustomerChurn2,TotalCharges = replace(TotalCharges,
+is.na(TotalCharges), mean(TotalCharges, na.rm = TRUE)))
+
+
+CustomerChurn2 <- mutate(CustomerChurn2,PaymentMethod= replace(PaymentMethod, 
+is.na(PaymentMethod), "ElectronicCheck"))
+
+
+```
+
+#== Question 9-11
+
+```{r}
+
+CustomerChurn3 <- select(CustomerChurn2, PaymentMethod, MonthlyCharges, TotalCharges)
+ print(CustomerChurn3)
+```
+#==Part 2
+
+#==Question 12-17
+
+```{r}
+ggplot(data = CustomerChurn, aes(tenure))+
+geom_boxplot()
+boxplot(CustomerChurn2$tenure)$out
+
+outliers <- boxplot(CustomerChurn2$tenure)$out
+CustomerChurn2[which(CustomerChurn2$tenure %in% outliers),]
+
+CustomerChurn3 <- CustomerChurn2[-which(CustomerChurn2$tenure %in% outliers),]
+boxplot(CustomerChurn3$tenure)
+
+```
+
+
+
