@@ -1,0 +1,224 @@
+---
+title: "Module 4 Assignment 2"
+author: "Zackery Bradley"
+date: "9/13/2021"
+output: word_document
+---
+**Packages**
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(caret)
+library(gridExtra)
+library(vip)
+library(ranger)
+library(naniar) 
+drug =drug_data <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 4/drug_data.csv")
+#install.packages("ggrepel")
+library(ggrepel)
+include = FALSE
+```
+library(tidyverse)
+library(tidymodels)
+library(caret)
+library(gridExtra)
+install.packages("vip")
+library(vip)
+library(ranger)
+library(naniar) 
+drug =drug_data <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 4/drug_data.csv")
+
+**Pre Tasks**
+```{r}
+names(drug) = c("ID", "Age", "Gender", "Education", "Country", "Ethnicity",
+"Nscore", "Escore", "Oscore", "Ascore", "Cscore", "Impulsive",
+"SS", "Alcohol", "Amphet", "Amyl", "Benzos", "Caff", "Cannabis",
+"Choc", "Coke", "Crack", "Ecstasy", "Heroin", "Ketamine", "Legalh",
+"LSD", "Meth", "Mushrooms", "Nicotine", "Semer", "VSA")
+#str(drug)
+
+drug[drug == "CL0"] = "No"
+drug[drug == "CL1"] = "No"
+drug[drug == "CL2"] = "Yes"
+drug[drug == "CL3"] = "Yes"
+drug[drug == "CL4"] = "Yes"
+drug[drug == "CL5"] = "Yes"
+drug[drug == "CL6"] = "Yes"
+drug_clean = drug %>% mutate_at(vars(Age:Ethnicity), funs(as_factor)) %>%
+mutate(Age = factor(Age, labels = c("18_24", "25_34", "35_44",
+"45_54", "55_64", "65_"))) %>%
+mutate(Gender = factor(Gender, labels = c("Male", "Female"))) %>%
+mutate(Education = factor(Education, labels =
+c("Under16", "At16", "At17", "At18", "SomeCollege",
+"ProfessionalCert", "Bachelors", "Masters", "Doctorate"))) %>%
+mutate(Country = factor(Country,
+labels = c("USA", "NewZealand", "Other", "Australia",
+"Ireland","Canada","UK"))) %>%
+mutate(Ethnicity = factor(Ethnicity,
+labels = c("Black", "Asian", "White", "White/Black", "Other",
+"White/Asian", "Black/Asian"))) %>%
+mutate_at(vars(Alcohol:VSA), funs(as_factor)) %>%
+select(-ID)
+str(drug_clean)
+drug_clean = drug_clean %>% select(!(Alcohol:Mushrooms)) %>% select(!(Semer:VSA))
+names(drug_clean)
+```
+**Task 1**
+```{r}
+#str(drug_clean)
+#summary(drug_clean)
+vis_miss(drug_clean) 
+```
+There is no missing data in the dataset.
+**Task 2**
+
+```{r}
+set.seed(1234)
+drug_split = initial_split(drug_clean, prob = .70, strata = Nicotine)
+train = training(drug_split)
+test = testing(drug_split)
+```
+**Task 3**
+```{r}
+
+p1 = ggplot(train, aes(x = Age, fill = Nicotine)) + geom_bar(position = "fill")
+p2 = ggplot(train, aes(x = Gender, fill = Nicotine)) + geom_bar(position = "fill")
+p3 =  ggplot(train, aes(x = Education, fill = Nicotine)) + geom_bar(position = "fill")
+a1 =  ggplot(train, aes(x = Country, fill = Nicotine)) + geom_bar(position = "fill")
+a2 =  ggplot(train, aes(x = Ethnicity, fill = Nicotine)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3)
+grid.arrange(a1,a2) 
+p1 = ggplot(train, aes(x = Nscore, y = Nicotine)) + geom_boxplot()
+p2 = ggplot(train, aes(x = Escore, y = Nicotine)) + geom_boxplot()
+p3 = ggplot(train, aes(x = Oscore, y = Nicotine)) + geom_boxplot()
+p4 = ggplot(train, aes(x = Ascore, y = Nicotine)) + geom_boxplot()
+a1 = ggplot(train, aes(x = Cscore, y = Nicotine)) + geom_boxplot()
+a2 = ggplot(train, aes(x = Impulsive, y = Nicotine)) + geom_boxplot()
+a3 = ggplot(train, aes(x = SS, y = Nicotine)) + geom_boxplot()
+grid.arrange(p1,p2,p3,p4, ncol = 2)
+grid.arrange(a1,a2,a3, ncol = 2)
+
+```
+Ethnicity- Nicotine usage seems to be common for all ethnicity, however Black and Asian has the lowest amount of usage.
+Gender- Males tend to indulge in Nicotine usage  more so than females.
+Country - Ireland has detrimentally more Nicotines users than any other country listed.
+Education- suprisingly, people who have had some college tend to use nicotine more. However, I believe this is slightly skewed, because if we had an adult without college variable I believe it have the highest usage in nicotine.
+Age- Nicotine usage tends to decrease as one gets older as per our model.
+Cscore- people tend to be concious about their nicotine habits.
+Impulsive- people who used nicotine report usage do to impulsiveness frequently.
+SS- most nicotine users enjoy the sensation the nicotine gives them.
+Ascore- there seems to not be a significant relationship between agreeableness and nicotine usage
+Nscore-users typically feel that nicotine usage has led to a negative affect
+Oscore- the average person tends to be more open to the experience than others.
+Escore- there seems to be no real evidence that nicotine users are more outgoing than those who are not.
+
+**Task 4**
+```{r}
+set.seed(123)
+rf_folds = vfold_cv(train, v = 5)
+
+nicotine_recipe = recipe(Nicotine ~., train) %>%
+  step_dummy(all_nominal(), -all_outcomes())
+
+rf_model = rand_forest(mtry = tune(), min_n = tune(), trees = 100) %>%  
+  set_engine("ranger", importance = "permutation") %>% 
+  set_mode("classification")
+
+nicotine_wflow = 
+  workflow() %>% 
+  add_model(rf_model) %>% 
+  add_recipe(nicotine_recipe)
+
+set.seed(123)
+rf_res = tune_grid(
+  nicotine_wflow,
+  resamples = rf_folds,
+  grid = 20 
+)
+```
+
+
+```{r}
+rf_res %>%
+  collect_metrics() %>%
+  filter(.metric == "accuracy") %>%
+  select(mean, min_n, mtry) %>%
+  pivot_longer(min_n:mtry,
+    values_to = "value",
+    names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "Accuracy")
+```
+Refining the parameters  
+```{r}
+rf_recipe = recipe(Nicotine ~., train) %>%
+  step_dummy(all_nominal(), -all_outcomes())
+
+rf_model = rand_forest(mtry = tune(), min_n = tune(), trees = 100) %>% 
+  set_engine("ranger", importance = "permutation") %>% 
+  set_mode("classification")
+nicotine_wflow = 
+  workflow() %>% 
+  add_model(rf_model) %>% 
+  add_recipe(nicotine_recipe)
+
+rf_grid = grid_regular(
+  mtry(range = c(2, 8)), 
+  min_n(range = c(5, 20)), 
+  levels = 10
+)
+
+set.seed(123)
+rf_res_tuned = tune_grid(
+  nicotine_wflow,
+  resamples = rf_folds,
+  grid = rf_grid #use the tuning grid
+)
+
+rf_res_tuned %>%
+  collect_metrics() %>%
+  filter(.metric == "accuracy") %>%
+  mutate(min_n = factor(min_n)) %>%
+  ggplot(aes(mtry, mean, color = min_n)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "Accuracy")
+
+best_rf = select_best(rf_res_tuned, "accuracy")
+
+final_rf = finalize_workflow(
+  nicotine_wflow,
+  best_rf
+)
+
+final_rf
+```
+
+**Task 5**
+```{r}
+final_rf_fit = fit(final_rf, train)
+final_rf_fit %>% pull_workflow_fit() %>% vip(geom = "point")
+```
+As we can see from the model, The most important variables to a drug user are, SS (Sensationn Seeking) is of great importance, and whether or not they are open to experience (Oscore). 
+**Task 6**
+```{r}
+trainpredrf = predict(final_rf_fit, train)
+head(trainpredrf)
+
+confusionMatrix(trainpredrf$.pred_class, train$Nicotine, 
+                positive = "Yes")
+
+
+testpredrf = predict(final_rf_fit, test)
+head(testpredrf)
+
+confusionMatrix(testpredrf$.pred_class, test$Nicotine, 
+                positive = "Yes")
+```
+
+**Task 7**
+
+I believe this model would be very helpful in real life use.Thus data could have used to see what traits are relateable to different drug users. Knowing these traits, we could possibly find other more productive activities that offer these same traits as a means of rehab to these individuals. I don't think I would personally have any concerns about the model, because I believe all of the information is relevant and can be used for multiple applications.

@@ -1,0 +1,173 @@
+---
+title: "Module 3 assignment 2"
+author: "Zackery Bradley"
+date: "9/8/2021"
+output: word_document
+---
+
+**Packages**
+```{r}
+library(e1071)
+library(ROCR)
+library(tidymodels)
+library(tidyverse)
+library(glmnet)
+library(readr)
+parole <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 3/parole.csv")
+```
+install.packages("e1071")
+install.packages("ROCR")
+library(e1071)
+library(ROCR)
+library(tidymodels)
+library(tidyverse)
+library(glmnet)
+library(readr)
+parole <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 3/parole.csv")
+**Pre-Assignment tasks**
+```{r}
+parole = parole %>% mutate(violator = as_factor(violator))  
+parole = parole %>% mutate(male = as_factor(male)) %>%
+mutate(male = fct_recode(male, "0" = "female", "1" = "male"))
+
+parole = parole %>% mutate(race = as_factor(race)) %>%
+mutate(race = fct_recode(race, "0" = "otherwise", "1" = "white")) 
+
+parole = parole %>% mutate(state = as_factor(state)) %>%
+mutate(state = fct_recode(state, "1" = "other state", "2" = "Kentucky", "3" = "Louisiana", "4" = "Virginia"))
+
+parole = parole %>% mutate(crime = as_factor(crime)) %>%
+mutate(crime = fct_recode(crime, "1" = "other crime", "2" = "larceny", "3" = "drug related", "4" = "driving related"))
+
+parole = parole %>% mutate(multiple.offenses = as_factor(multiple.offenses)) %>%
+mutate(multiple.offenses = fct_recode(multiple.offenses, "no" = "otherwise", "1" = "multiple offenses"))
+```
+
+**Task 1**
+```{r}
+set.seed(12345)
+parole_split = initial_split(parole, prob = .70, strata = violator)
+train = training(parole_split)
+test = testing(parole_split)
+```
+**Task 2**
+```{r}
+ggplot(train,aes(x=violator, fill = male)) + geom_bar(position = "fill") + theme_bw()
+ggplot(train,aes(x=violator, fill = race)) + geom_bar(position = "fill") + theme_bw()
+ggplot(train,aes(x=violator, fill = age)) + geom_bar(position = "fill") + theme_bw()
+ggplot(train,aes(x=violator, fill = state)) + geom_bar(position = "fill") + theme_bw()
+ggplot(train,aes(x=violator, fill = time.served)) + geom_bar(position = "fill") + theme_bw()
+ggplot(train,aes(x=violator, fill = max.sentence)) + geom_bar(position = "fill") + theme_bw()
+ggplot(train,aes(x=violator, fill = multiple.offenses)) + geom_bar(position = "fill") + theme_bw()
+ggplot(train,aes(x=violator, fill = crime)) + geom_bar(position = "fill") + theme_bw()
+
+```
+According to the regression, we could get a sense that a parolee would most likely violate his or her parole based on their state and crime. This is sensible because certain crimes typically have longer parole times; thus giving the parolee more time to violate parole. Also, parole varies greatly in states, as one state may have different state laws than the other.
+**Task 3**
+```{r}
+train_model=
+logistic_reg(mode = "classification") %>%
+set_engine("glm")
+
+train_recipe = recipe(violator ~ state, train) %>%
+step_dummy(all_nominal(), - all_outcomes())
+
+train_wf =
+workflow() %>%
+add_recipe(train_recipe) %>%
+add_model(train_model) 
+  
+train_fit = fit(train_wf, train)
+summary(train_fit$fit$fit$fit)
+```
+I believe the state variable is the most predictive of the variable "violator". I chose this based on the stacked bar chart above,showing a significant difference in parole violations between states. 
+**Task 4**
+```{r}
+
+train_model=
+logistic_reg(mode = "classification") %>%
+set_engine("glm")
+
+train_recipe = recipe(violator ~ crime + state, train) %>%
+step_dummy(all_nominal(), - all_outcomes())
+
+train_wf =
+workflow() %>%
+add_recipe(train_recipe) %>%
+add_model(train_model) 
+  
+train_fit2 = fit(train_wf, train)
+summary(train_fit$fit$fit$fit)
+```
+The model seems to be intuitive because the actual AIC value does not disapate too greatly from the residual deviance. the significant factors include states 3 and 4, which are Louisiana and Virginia respectfully. 
+**Task 5**
+```{r}
+train_model=
+logistic_reg(mode = "classification") %>%
+set_engine("glm")
+
+train_recipe = recipe(violator ~ state + multiple.offenses + race, train) %>%
+step_dummy(all_nominal(), - all_outcomes())
+
+train_wf =
+workflow() %>%
+add_recipe(train_recipe) %>%
+add_model(train_model) 
+  
+train_fit3 = fit(train_wf, train)
+summary(train_fit$fit$fit$fit)
+```
+upon inspection the model, we could find that the model is of pretty good indicator that whether a parolee violates their parole or not does indeed fluctuate based on the offenders state.significant states include: state 3(Louisiana) and state 4 (Virginia). 
+**task 6**
+```{r}
+predictions = predict(train_fit3, train, type = "prob")[2]
+head(predictions)
+
+```
+
+
+**Task 7**
+```{r}
+ROCRpred = prediction(predictions, train$violator)
+ROCRperf = performance(ROCRpred, "tpr", "fpr")
+plot(ROCRperf, colorize=TRUE, print.cutoffs.at=seq(0,1,by=0.1), text.adj=c(-0.2,1.7))
+```
+**Task 8**
+
+```{r}
+as.numeric(performance(ROCRpred, "auc")@y.values)
+
+opt.cut = function(perf, pred){
+    cut.ind = mapply(FUN=function(x, y, p){
+        d = (x - 0)^2 + (y-1)^2
+        ind = which(d == min(d))
+        c(sensitivity = y[[ind]], specificity = 1-x[[ind]], 
+            cutoff = p[[ind]])
+    }, perf@x.values, perf@y.values, pred@cutoffs)
+}
+print(opt.cut(ROCRperf, ROCRpred))
+
+t1 = table(train$violator,predictions > 0.5)
+t1
+(t1[1,1]+t1[2,2])/nrow(train)
+
+```
+the accuracy is displayed as 89.9%, while the sensitivity and specifivity are 0.7586207 and 0.8210291 given a cutoff of 0.1295001 respectively.
+
+
+
+
+**Task 9**
+
+```{r}
+t1 = table(train$violator, predictions > 0.3)
+t1
+(t1[1,1] + t1[2,2]/nrow(train))
+```
+**Task 10**
+```{r}
+(410+34)/(410+37+24+34)
+#87.9%
+```
+
+accuracy of the model is 87.9%.

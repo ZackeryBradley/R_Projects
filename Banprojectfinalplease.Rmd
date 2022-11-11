@@ -1,0 +1,43 @@
+---
+title: "Untitled"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    runtime: shiny
+---
+
+```{r setup, include=FALSE}
+#install.packages(c("flexdashboard","tidyverse"))
+library(flexdashboard)
+library(tidyverse)
+```
+
+```{r}
+diamonds = ggplot2::diamonds
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+ggplot(diamonds,aes(x=carat,y=price, color = cut)) + geom_point()
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+ggplot(diamonds,aes(x=cut,y=price)) + geom_boxplot()
+```
+
+### Chart C
+
+```{r}
+ggplot(diamonds,aes(x=clarity,y=price)) + geom_boxplot()
+```
+

@@ -1,0 +1,107 @@
+---
+title: "BAN 502 FlexDashBoard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    runtime: Shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidymodels)
+library(tidyverse)
+library(ggplot2) ###
+library(vip)
+library(shinydashboard) ###
+library(ranger)
+library(vip)
+library(naniar)
+library(shiny) ###
+student = read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 5/ames_student.csv")
+train_fit = readRDS("train_fit.rds")
+test = readRDS("test.rds")
+train = readRDS("train.rds")
+ 
+```
+
+library(flexdashboard)
+#install.packages("flexdashboard")
+library(tidyverse)
+library(ggplot2)
+train_fit = readRDS("train_fit.rds")
+```{r}
+shinyUI(
+dashboardPage(
+dashboardHeader(title = "data for homes in Ames, Iowa"),
+dashboardSidebar(
+  menuItem("Menu Item 1"),
+  menuSubItem("dashboard Subitem 1"),
+  menuItem("Menu Item 2"),
+  menuItem("Menu Item 3")
+),
+dashboardBody()
+)
+)
+
+shinyServer(function(input,output){})
+
+
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+**pre tasks**
+```{r}
+student = student %>% mutate_if(is.character,as_factor)
+student = student %>% mutate(Above_Median = as_factor(Above_Median)) %>%
+  mutate(Above_Median = fct_recode(Above_Median, "No" = "0", "Yes" = "1"))
+
+
+set.seed(1234)
+student_split = initial_split(student, prob = .70, strata = Above_Median)
+train = training(student_split)
+test = testing(student_split)
+
+train_recipe = recipe(Above_Median ~., train) %>%
+  step_dummy(all_nominal(), -all_outcomes())
+
+train_model = rand_forest() %>% 
+  set_engine("ranger", importance = "permutation") %>% 
+  set_mode("classification")
+
+train_wflow = 
+  workflow() %>% 
+  add_model(train_model) %>% 
+  add_recipe(train_recipe)
+
+set.seed(12345)
+train_fit = fit(train_wflow, train)
+```
+
+
+
+### Chart A
+
+```{r}
+
+train_fit %>% pull_workflow_fit() %>% vip(geom = "point")
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+ggplot(train, aes(x = Gr_Liv_Area, y = Above_Median)) + geom_boxplot()+ggtitle("Ames Iowa Homes")
+ggplot(train, aes(x = Year_Built, y = Above_Median)) + geom_boxplot()+ggtitle("Ames Iowa Homes")
+```
+
+### Chart C
+
+```{r}
+ggplot(train, aes(x = Garage_Cars , fill = Above_Median)) + geom_bar(position = "fill")+ggtitle("Ames Iowa Homes")
+
+```
+

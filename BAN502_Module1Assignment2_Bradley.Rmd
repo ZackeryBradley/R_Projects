@@ -1,0 +1,83 @@
+---
+title: "BAN 502 MODULE 1"
+author: "Zackery Bradley"
+date: "8/27/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+
+** Task 1**
+
+```{r}
+install.packages("Tidyverse",repos = "http://cran.us.r-project.org") #install.packages(tidyverse), I am not sure why, but ths is the only way I could successfully get the Tidyverse package to create my markdown document.
+library(tidyverse)
+InventoryData_2_ <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 1/InventoryData (2).csv", 
+col_types = cols(`Item SKU` = col_number()))
+
+```
+**Task 2**
+```{r}
+diamonddata=diamonds
+nrow(diamonddata)  #shows the numer of rows on a dataframe. (53,940)
+ncol(diamonddata)  #shows the number of columns on a dataframe (10)
+```
+**Task 3**
+
+```{r}
+ggplot(data = diamonddata, aes (x=carat, y=price)) +
+geom_point()
+#one can obsrve that tyically, the bigger the carat, the more likely it is to be more expensive.
+```
+**Task 4**
+
+```{r}
+ggplot(data = diamonddata, aes (x=carat, y=price, color = cut)) +
+geom_point()
+#the more premium the cut, the more likely the diamond is to be more expensive. So we see that the pricing of a diamond is primarily based on a combination of carat and cut.
+```
+
+**Task 5**
+
+```{r}
+ggplot(data = diamonddata, aes (x=carat, y=price, color = cut)) +
+geom_point()+
+facet_grid(color ~ .)
+#from analyzing the facet, we can determine that the majory of ideal and premium cuts are less than 3 carats in size, and are more expensive than their lower grade counterparts.
+```
+
+**Task 6**
+```{r}
+
+str(InventoryData_2_)
+summary(InventoryData_2_)
+```
+**Task 7**
+```{r}
+inventoryA <- filter(InventoryData_2_, Supplier == 'A')
+nrow(inventoryA) #There are 3,695 rows present.
+```
+
+
+**Task 8**
+
+```{r}
+inventoryA =mutate(inventoryA, OnHandRatio =`On Hand`/`Annual Demand`)
+#This code creates an additional variable called "Onhandratio" which divides the 'On Hand' variable, by the 'Annual Demand' ratio.
+```
+**Task 9**
+
+```{r}
+
+Avg_cost <- inventoryA
+Avg_cost$SKUAvgCost <- Avg_cost$SKUAvgCost
+Avg_cost = inventoryA %>% group_by(`Item SKU`) %>% summarise(`SKUAvgCost` = mean(`Cost per Unit ($)`))
+                                                             
+```
+**Task 10**
+
+#With my previous experience, I found tasks 7-9 challenging.
+
+
+

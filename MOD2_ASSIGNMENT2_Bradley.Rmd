@@ -1,0 +1,180 @@
+---
+title: "MOD 2 ASSIGNMENT 2"
+author: "Zackery Bradley"
+date: "9/1/2021"
+output: word_document
+---
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+#install.packages("glmnet")
+library(glmnet)
+library(GGally)
+#install.packages("ggcorrplot")
+library(ggcorrplot)
+library(MASS)
+#install.packages("car")
+library(car)
+library(lubridate)
+library(lmtest)
+library(readr)
+#install.packages("devtools")
+library(devtools)
+ #install_version("parsnip", version = "0.1.5", repos = "http://cran.us.r-project.org")
+ library(parsnip)
+bike_cleaned <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 2/bike_cleaned.csv")
+```
+library(tidyverse)
+library(tidymodels)
+install.packages("glmnet")
+library(glmnet)
+library(GGally)
+install.packages("ggcorrplot")
+library(ggcorrplot)
+library(MASS)
+install.packages("car")
+library(car)
+library(lubridate)
+library(lmtest)
+library(readr)
+install.packages(“devtools”)
+library(devtools)
+ install_version("parsnip", version = "0.1.5", repos = "http://cran.us.r-project.org")
+ library(parsnip)
+bike_cleaned <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 2/bike_cleaned.csv")
+
+**Task 1**
+
+```{r}
+bike_cleaned <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 2/bike_cleaned.csv")
+
+
+bike = bike_cleaned %>% mutate(dteday =mdy(dteday)) 
+bike = bike %>% mutate(season = as_factor(season))
+bike = bike %>% mutate(mnth = as_factor(mnth))
+bike = bike %>% mutate(holiday = as_factor(holiday))
+bike = bike %>% mutate(weekday = as_factor(weekday))
+bike = bike %>% mutate(workingday = as_factor(workingday))
+bike = bike %>% mutate(weathersit = as_factor(weathersit))
+
+bike = bike %>% mutate(hr= as_factor(hr))
+```
+Factor variables can be either numeric or string variables. This makes them useful for statistical modeling.
+
+**Task 2**
+```{r}
+ggpairs(bike, columns = c(10:13, 16))
+```
+from the results of the plot, the variable "temp" seems to be best correlated with count.
+**Task 3**
+```{r}
+ggplot(bike,aes(x=hr,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=season,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=holiday,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=mnth,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=weekday,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=workingday,y=count)) + geom_boxplot() + theme_bw()
+ggplot(bike,aes(x=weathersit,y=count)) + geom_boxplot() + theme_bw()
+
+```
+hr hr does have an affect on count as we can see that the counts are typically higher during midday
+season season does have an affect on count, as we can see that count is typically higher in warmer seasons
+holiday while we can see than "non-holidays" tend to have higher sales numbers, both relationships have around the same quartiles. holiday does not have a significant affect on count.
+mnth mnth has an affect on count. we can see that count is usually higher in the warmer months.
+weekday while counts are usually higher mid week, the quartiles seem to remain steady throughout the week. weekday does not have an affect on count.
+workingday the quartiles show that there is no real affect on workingday and count as there is not significant change throughout.
+weathersit weathersit does have an affect on count. count is typically higher on non-rainy days.
+**Task 4**
+```{r}
+weathersit_simple = recipe(count ~ weathersit, bike) 
+#1st df, org df
+
+
+weathersitlm_model=  
+  #2nd df
+linear_reg() %>%
+set_engine("lm")
+
+weathersitlm_wflow= 
+  #3rd df
+workflow() %>%
+add_model(weathersitlm_model) %>% 
+  #2nd df
+add_recipe(weathersit_simple)     
+#1st df
+
+weathersitlm_fit =                
+#4th df
+fit(weathersitlm_wflow,bike)    
+#3rd df, org df
+
+summary(weathersitlm_fit$fit$fit$fit) 
+#4th df
+
+```
+with the adjusted r-squared being .02, the model seems to be of good quality.
+**Task 5**
+```{r}
+str(bike)
+
+bike_recipe=recipe(count~season+mnth+hr+holiday+weekday+workingday+weathersit+temp+atemp+hum+windspeed,bike) %>%
+  
+step_dummy(all_nominal()) %>%
+
+step_center(all_predictors())  %>%
+step_scale(all_predictors())
+
+Bike_Ridge_Model=
+linear_reg(mixture =  0)%>%
+set_engine("glmnet")
+
+ridge_wflow =
+workflow() %>%
+add_model(Bike_Ridge_Model) %>%
+add_recipe(bike_recipe) 
+
+bike_ridge_fit = fit(ridge_wflow,bike)
+bike_ridge_fit
+plot(bike_ridge_fit$fit$fit$fit$lambda,bike_ridge_fit$fit$fit$fit$dev.ratio)
+
+bike_ridge_fit %>%
+pull_workflow_fit() %>%
+pluck("fit")
+
+``` 
+
+
+An appropriate Lambda would be 17 on an R squared value of .6196. This model, or alpha, we can see form the plot that this represents a good regularlization strength.
+
+
+**Task 6**
+```{r}
+bike_recipe_lasso=recipe(count~season+mnth+hr+holiday+weekday+workingday+weathersit+temp+atemp+hum+windspeed,bike) %>%
+
+step_dummy(all_nominal()) %>%
+step_center(all_predictors())  %>%
+step_scale(all_predictors()) 
+
+Bike_Lasso_Model=
+linear_reg(mixture = 1) %>%
+set_engine("glmnet")
+Bike_Lasso_Wflow =
+workflow() %>%
+add_model(Bike_Lasso_Model) %>%
+add_recipe(bike_recipe_lasso)
+
+Bike_Lasso_Model_fit= fit(Bike_Lasso_Wflow,bike)
+Bike_Lasso_Model_fit
+plot(Bike_Lasso_Model_fit$fit$fit$fit$lambda,Bike_Lasso_Model_fit$fit$fit$fit$dev.ratio)
+
+Bike_Lasso_Model_fit %>%
+pull_workflow_fit() %>%
+pluck("fit")
+
+bike_ridge_fit %>%
+pull_workflow_fit() %>%
+pluck("fit")
+
+```
+An appropriate Lambda would be 19 on an R squared value of .6185. This model, or lamda, we can see form the plot that this represents a predictor of the model.

@@ -1,0 +1,59 @@
+---
+title: "BAN 502 FlexDashBoard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    runtime: shiny
+    
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidymodels)
+library(tidyverse)
+library(ggplot2) 
+library(vip)
+library(shinydashboard) 
+library(ranger)
+library(naniar)
+library(shiny)
+#install.packages("rsconnect")
+
+student = read_csv("ames_student.csv")
+train = read_csv("train.csv")
+
+train = train %>% mutate_if(is.character,as_factor)
+train = train %>% mutate(Above_Median = as_factor(Above_Median)) %>%
+  mutate(Above_Median = fct_recode(Above_Median, "No" = "0", "Yes" = "1"))
+```
+
+
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+ggplot(train, aes(x = Year_Built, y = Above_Median)) + geom_boxplot()+ggtitle("Ames Iowa Homes")
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+ggplot(train, aes(x = Gr_Liv_Area, y = Above_Median)) + geom_boxplot()+ggtitle("Ames Iowa Homes")
+
+```
+
+### Chart C
+
+```{r}
+ggplot(train, aes(x = Garage_Cars , fill = Above_Median)) + geom_bar(position = "fill")+ggtitle("Ames Iowa Homes")
+
+```
+

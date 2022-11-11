@@ -1,0 +1,217 @@
+---
+title: "BAN 502 Project"
+author: "Zackery Bradley"
+date: "9/14/2021"
+output: word_document
+---
+
+
+
+**Packages and Datasets**
+```{r}
+
+rsconnect::setAccountInfo(name='zackerybradley', token='17424B895B53A2576DA270EC5DEAE3CF', secret='tzIoTmQDagLMQIDz4EJ5ss4HgqtAu+1Xws43B1h/')
+library(rsconnect)
+
+
+library(tidyverse)
+library(tidymodels)
+library(ranger)
+library(VIM) 		
+library(rpart) 			
+library(rpart.plot) 			
+library(RColorBrewer)
+library(caret)
+library(mlbench)
+library(dplyr)
+library(ggrepel)
+library(naniar)
+library(vip)
+library(ggplot2)
+
+#competition = read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 5/ames_competition.csv")
+
+student = read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 5/ames_student.csv")
+#sampleSubmission = read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 5/sampleSubmission.csv")
+```
+
+library(tidyverse)
+library(tidymodels)
+library(ranger)
+library(VIM) 		
+library(rpart) 			
+library(rpart.plot) 			
+library(RColorBrewer)
+library(caret)
+library(mlbench)
+library(dplyr)
+library(ggrepel)
+library(naniar)
+library(vip)
+library(ggplot2)
+
+
+#competition = read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 5/ames_competition.csv")
+
+student = read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 5/ames_student.csv")
+#sampleSubmission = read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 5/sampleSubmission.csv")
+**Identifying Missing Data**
+```{r}
+student = student %>% mutate_if(is.character,as_factor)
+student = student %>% mutate(Above_Median = as_factor(Above_Median)) %>%
+  mutate(Above_Median = fct_recode(Above_Median, "No" = "0", "Yes" = "1"))
+
+vis_miss(student)
+
+```
+
+
+
+**Split**
+
+```{r}
+set.seed(1234)
+student_split = initial_split(student, prob = .70, strata = Above_Median)
+train = training(student_split)
+test = testing(student_split)
+ 
+```
+
+**visualizations**
+```{r}
+#summary(train)
+
+
+p1 = ggplot(train, aes(x = MS_SubClass , fill = Above_Median)) + geom_bar(position = "fill")
+theme(axis.text.x = element_text(angle = 90, vjust=0.9)) 
+p2 = ggplot(train, aes(x = MS_Zoning, fill = Above_Median)) + geom_bar(position = "fill")
+p3 =  ggplot(train, aes(x = Street, fill = Above_Median)) + geom_bar(position = "fill") 
+p4 =  ggplot(train, aes(x = Alley, fill = Above_Median)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3,p4)
+p1 = ggplot(train, aes(x = Lot_Shape, fill = Above_Median)) + geom_bar(position = "fill")
+p2 = ggplot(train, aes(x = Land_Contour, fill = Above_Median)) + geom_bar(position = "fill")
+theme(axis.text.x = element_text(angle = 90, vjust=0.5))
+p3 =  ggplot(train, aes(x = Utilities, fill = Above_Median)) + geom_bar(position = "fill")
+p4 =  ggplot(train, aes(x = Lot_Config, fill = Above_Median)) + geom_bar(position = "fill")
+theme(axis.text.x = element_text(angle = 90, vjust=0.5))
+grid.arrange(p1,p2,p3,p4)
+p1 = ggplot(train, aes(x = Land_Slope, fill = Above_Median)) + geom_bar(position = "fill")
+p2 = ggplot(train, aes(x = Neighborhood, fill = Above_Median)) + geom_bar(position = "fill")
+p3 =  ggplot(train, aes(x = Condition_1, fill = Above_Median)) + geom_bar(position = "fill")
+p4 =  ggplot(train, aes(x = Condition_2, fill = Above_Median)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3,p4)
+p1 = ggplot(train, aes(x = Bldg_Type, fill = Above_Median)) + geom_bar(position = "fill")
+p2 = ggplot(train, aes(x = House_Style, fill = Above_Median)) + geom_bar(position = "fill")
+p3 =  ggplot(train, aes(x = Overall_Qual, fill = Above_Median)) + geom_bar(position = "fill")
+p4 =  ggplot(train, aes(x = Overall_Cond, fill = Above_Median)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3,p4)
+p1 = ggplot(train, aes(x = Roof_Style, fill = Above_Median)) + geom_bar(position = "fill")
+p2 = ggplot(train, aes(x = Roof_Matl, fill = Above_Median)) + geom_bar(position = "fill")
+p3 = ggplot(train, aes(x = Exterior_1st, fill = Above_Median)) + geom_bar(position = "fill")
+p4 =  ggplot(train, aes(x = Exterior_2nd, fill = Above_Median)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3,p4)
+p1 =  ggplot(train, aes(x = Mas_Vnr_Type, fill = Above_Median)) + geom_bar(position = "fill")
+p2 =  ggplot(train, aes(x = Mas_Vnr_Area, fill = Above_Median)) + geom_bar(position = "fill")
+p3 = ggplot(train, aes(x = Exter_Qual, fill = Above_Median)) + geom_bar(position = "fill")
+p4 = ggplot(train, aes(x = Exter_Cond, fill = Above_Median)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3,p4)
+p1 =  ggplot(train, aes(x = Foundation, fill = Above_Median)) + geom_bar(position = "fill")
+p2 =  ggplot(train, aes(x = Bsmt_Qual, fill = Above_Median)) + geom_bar(position = "fill")
+p3 =  ggplot(train, aes(x = Bsmt_Cond, fill = Above_Median)) + geom_bar(position = "fill")
+p4 = ggplot(train, aes(x = Bsmt_Exposure, fill = Above_Median)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3,p4)
+p1 = ggplot(train, aes(x = BsmtFin_Type_1, fill = Above_Median)) + geom_bar(position = "fill")
+p2 =  ggplot(train, aes(x = BsmtFin_Type_2, fill = Above_Median)) + geom_bar(position = "fill")
+p3 =  ggplot(train, aes(x = Heating, fill = Above_Median)) + geom_bar(position = "fill")
+p4 = ggplot(train, aes(x = Heating_QC, fill = Above_Median)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3,p4)
+p1 = ggplot(train, aes(x = Central_Air, fill = Above_Median)) + geom_bar(position = "fill")
+p2 =  ggplot(train, aes(x = Electrical, fill = Above_Median)) + geom_bar(position = "fill")
+p3 = ggplot(train, aes(x = Garage_Cars , fill = Above_Median)) + geom_bar(position = "fill")
+grid.arrange(p1,p2,p3)
+
+p1 = ggplot(train, aes(x = Lot_Frontage, y = Above_Median)) + geom_boxplot()
+p2 = ggplot(train, aes(x = Lot_Area, y = Above_Median)) + geom_boxplot()
+p3 = ggplot(train, aes(x = Year_Built, y = Above_Median)) + geom_boxplot()
+p4 = ggplot(train, aes(x = Year_Remod_Add, y = Above_Median)) + geom_boxplot()
+grid.arrange(p1,p2,p3,p4, ncol = 2)
+p1 = ggplot(train, aes(x = Mas_Vnr_Area, y = Above_Median)) + geom_boxplot()
+p2 = ggplot(train, aes(x = BsmtFin_SF_1, y = Above_Median)) + geom_boxplot()
+p3 = ggplot(train, aes(x = BsmtFin_SF_2, y = Above_Median)) + geom_boxplot()
+p4 = ggplot(train, aes(x = Bsmt_Unf_SF, y = Above_Median)) + geom_boxplot()
+grid.arrange(p1,p2,p3,p4, ncol = 2)
+p1 = ggplot(train, aes(x = Total_Bsmt_SF, y = Above_Median)) + geom_boxplot()
+p2 = ggplot(train, aes(x = First_Flr_SF, y = Above_Median)) + geom_boxplot()
+p3 = ggplot(train, aes(x = Second_Flr_SF, y = Above_Median)) + geom_boxplot()
+p4 = ggplot(train, aes(x = Low_Qual_Fin_SF, y = Above_Median)) + geom_boxplot()
+grid.arrange(p1,p2,p3,p4, ncol = 2)
+p1 = ggplot(train, aes(x = Gr_Liv_Area, y = Above_Median)) + geom_boxplot()
+p2 = ggplot(train, aes(x = Bsmt_Full_Bath, y = Above_Median)) + geom_boxplot()
+p3 = ggplot(train, aes(x = Bsmt_Half_Bath, y = Above_Median)) + geom_boxplot()
+p4 = ggplot(train, aes(x = Full_Bath, y = Above_Median)) + geom_boxplot()
+grid.arrange(p1,p2,p3,p4, ncol = 2)
+
+
+
+
+
+```
+
+
+
+
+
+
+
+**Random Forest 1**
+```{r}
+
+train_recipe = recipe(Above_Median ~., train) %>%
+  step_dummy(all_nominal(), -all_outcomes())
+
+train_model = rand_forest() %>% 
+  set_engine("ranger", importance = "permutation") %>% 
+  set_mode("classification")
+
+train_wflow = 
+  workflow() %>% 
+  add_model(train_model) %>% 
+  add_recipe(train_recipe)
+
+set.seed(12345)
+train_fit = fit(train_wflow, train)
+
+```
+
+**variable importance**
+```{r}
+train_fit %>% pull_workflow_fit() %>% vip(geom = "point")
+```
+
+**Phase 2 ideas**
+```{r}
+trainpredrf = predict(train_fit, train)
+head(trainpredrf)
+
+
+confusionMatrix(trainpredrf$.pred_class, train$Above_Median, 
+                positive = "Yes")
+```
+
+
+**load and save**
+```{r}
+saveRDS(train_fit, "train_fit.rds")
+train_fit = readRDS("train_fit.rds")
+saveRDS(train_fit, "test.rds")
+train_fit = readRDS("test.rds")
+saveRDS(train_fit, "train.rds")
+train_fit = readRDS("train.rds")
+saveRDS(train_fit, "student.rds")
+train_fit = readRDS("student.rds")
+saveRDS(train_fit, "student_split.rds")
+train_fit = readRDS("student_split.rds")
+```
+
+
+

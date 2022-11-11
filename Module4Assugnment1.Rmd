@@ -1,0 +1,258 @@
+---
+title: "Module 4 assignment 1"
+author: "Zackery Bradley"
+date: "9/11/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+
+
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(caret)
+library(rpart)
+library(rattle)
+library(RColorBrewer)
+library(devtools)
+install_version("parsnip", version = "0.1.5", repos = "http://cran.us.r-project.org")
+ library(parsnip)
+Blood <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 4/Blood.csv")
+parole <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 4/parole (1).csv")
+```
+library(tidyverse)
+library(tidymodels)
+install.packages("caret")
+library(caret)
+library(rpart)
+install.packages("rattle")
+library(rattle)
+library(RColorBrewer)
+Blood <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 4/Blood.csv")
+parole <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 4/parole (1).csv")
+
+
+**pre task**
+
+```{r}
+parole = parole %>% mutate(violator = as_factor(violator))  
+parole = parole %>% mutate(male = as_factor(male)) %>%
+mutate(male = fct_recode(male, "0" = "female", "1" = "male"))
+
+parole = parole %>% mutate(race = as_factor(race)) %>%
+mutate(race = fct_recode(race, "0" = "otherwise", "1" = "white")) 
+
+parole = parole %>% mutate(state = as_factor(state)) %>%
+mutate(state = fct_recode(state, "1" = "other state", "2" = "Kentucky", "3" = "Louisiana", "4" = "Virginia"))
+
+parole = parole %>% mutate(crime = as_factor(crime)) %>%
+mutate(crime = fct_recode(crime, "1" = "other crime", "2" = "larceny", "3" = "drug related", "4" = "driving related"))
+
+parole = parole %>% mutate(multiple.offenses = as_factor(multiple.offenses)) %>%
+mutate(multiple.offenses = fct_recode(multiple.offenses, "no" = "otherwise", "1" = "multiple offenses")) 
+```
+
+**Task 1**
+```{r}
+set.seed(12345)
+parole_split = initial_split(parole, prop = 0.7, strata = violator) 
+train = training(parole_split)
+test = testing(parole_split)
+```
+**Task 2**
+```{r}
+parole_recipe = recipe(violator  ~., train)
+
+tree_model = decision_tree() %>% 
+  set_engine("rpart", model = TRUE) %>% 
+  set_mode("classification")
+
+parole_wflow = 
+  workflow() %>% 
+  add_model(tree_model) %>% 
+  add_recipe(parole_recipe)
+
+parole_fit = fit(parole_wflow, parole)
+
+tree = parole_fit %>% 
+  pull_workflow_fit() %>% 
+  pluck("fit") 
+  
+fancyRpartPlot(tree, tweak = 1.5)
+
+```
+
+**Task 3**
+You would classify this parolee by going through the steps and asking the following questions:
+1. what state is he from? he is listed as state 3, Louisianna, so we would use the tree to the right.
+2. does he have multiple offenses? in this case he does, meaning that  his offenses are greater than zero. in this scenario we would move to the right.
+3. next we determine if the parolee was sentenced to 13 years or less. our example parolee was sentenced to 10 years. we would answer yes on this part of the decision tree and move to the left.
+4. lastly we would examine how much time the parolee actually served. our question states that he served 5 years. In response to our decision tree question of did he serve greater than or equal to 2.6 years, we would answer yes.
+5. from the conclusion, we can see that our answer comes to 4%.
+
+**Task 4**
+```{r}
+parole_fit$fit$fit$fit$cptable
+```
+The optimal cp value is 0.01 according to the table.
+**Task 5**
+```{r}
+set.seed(123)
+parole_folds = vfold_cv(train, v = 5)
+parole_recipe = recipe(violator ~., train) %>%
+  step_dummy(all_nominal(),-all_outcomes())
+
+tree_model = decision_tree(cost_complexity = tune()) %>% 
+  set_engine("rpart", model = TRUE) %>%
+  set_mode("classification")
+
+tree_grid = grid_regular(cost_complexity(),
+                          levels = 25) 
+parole_wflow = 
+  workflow() %>% 
+  add_model(tree_model) %>% 
+  add_recipe(parole_recipe)
+
+tree_res = 
+  parole_wflow %>% 
+  tune_grid(
+    resamples = parole_folds,
+    grid = tree_grid
+    )
+
+tree_res
+
+tree_res %>%
+  collect_metrics() %>%
+  ggplot(aes(cost_complexity, mean)) +
+  geom_line(size = 1.5, alpha = 0.6) +
+  geom_point(size = 2) +
+  facet_wrap(~ .metric, scales = "free", nrow = 2)
+```
+
+Borrowed code from: https://www.tidymodels.org/start/tuning/
+
+
+**task 6**
+```{r}
+best_tree = tree_res %>%
+  select_best("accuracy")
+
+best_tree
+
+```
+
+The optimal cp value yielding accuracy value is 0.04216965.
+**Task 7**
+
+```{r}
+#fancyRpartPlot(tree, tweak = 1.5)
+summary(train)
+
+```
+**task 8**
+```{r}
+treepred = predict(parole_fit, train, type = "class")
+head(treepred)
+
+
+confusionMatrix(treepred$.pred_class,train$violator,positive="1") 
+```
+
+The accuracy of the root was 90.87%
+
+**Task 9**
+```{r}
+Blood <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 4/Blood.csv") 
+
+Blood = Blood %>% mutate(DonatedMarch = as_factor(DonatedMarch)) %>%
+mutate(DonatedMarch = fct_recode(DonatedMarch, "0" = "No", "1" = "Yes")) 
+
+set.seed(1234)
+Blood_split = initial_split(Blood, prop = 0.7, strata = DonatedMarch) 
+train2 = training(Blood_split)
+test2 = testing(Blood_split)
+set.seed(1234)
+Blood_folds = vfold_cv(train2, v = 5)
+Blood_recipe = recipe(DonatedMarch ~., train2) %>%
+  step_dummy(all_nominal(),-all_outcomes())
+
+tree_model2 = decision_tree(cost_complexity = tune()) %>% 
+  set_engine("rpart", model = TRUE) %>%
+  set_mode("classification")
+
+tree_grid2 = grid_regular(cost_complexity(),
+                          levels = 25) 
+Blood_wflow = 
+  workflow() %>% 
+  add_model(tree_model) %>% 
+  add_recipe(Blood_recipe)
+
+tree_res2 = 
+  Blood_wflow %>% 
+  tune_grid(
+    resamples = Blood_folds,
+    grid = tree_grid2
+    )
+
+
+tree_res2
+tree_res2 %>%
+  collect_metrics() %>%
+  ggplot(aes(cost_complexity, mean)) +
+  geom_line(size = 1.5, alpha = 0.6) +
+  geom_point(size = 2) +
+  facet_wrap(~ .metric, scales = "free", nrow = 2)
+
+```
+The optimal cp values appears to be 0.79
+**Task 10**
+```{r}
+tree_res2 %>%
+  collect_metrics() %>%
+  ggplot(aes(cost_complexity, mean)) +
+  geom_line(size = 1.5, alpha = 0.6) +
+  geom_point(size = 2) +
+  facet_wrap(~ .metric, scales = "free", nrow = 2) 
+
+
+best_tree2 = tree_res2 %>%
+  select_best("accuracy")
+
+best_tree2
+
+final_wflow = 
+ Blood_wflow %>%  
+  finalize_workflow(best_tree2)
+
+Blood_fit = fit(final_wflow, train2)
+
+best_tree2= Blood_fit %>% 
+  pull_workflow_fit() %>% 
+  pluck("fit")
+
+fancyRpartPlot(best_tree2, tweak = 1.5) 
+
+
+```
+
+
+
+**Task 11**
+```{r}
+treepred3 = predict(Blood_fit, train2, type = "class")
+head(treepred3)
+
+confusionMatrix(treepred3$.pred_class,train2$DonatedMarch,positive="1") 
+
+treepred4 = predict(Blood_fit, test2, type = "class")
+head(treepred4)
+
+confusionMatrix(treepred4$.pred_class,test2$DonatedMarch,positive="1")
+
+```
+giving the P values of the training and test sets, we can determine that these sets are not of any significance.
+

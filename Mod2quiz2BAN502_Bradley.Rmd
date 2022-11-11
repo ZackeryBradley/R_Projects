@@ -1,0 +1,93 @@
+---
+title: "MOD 2 QUIZ 2"
+author: "Zackery Bradley"
+date: "8/30/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+
+```{r}
+library(tidymodels)
+library(tidyverse)
+library(GGally)
+library(lmtest)
+
+```
+**Task 1**
+```{r}
+air = airquality 
+#There are 153 observations and 6 variables
+summary(air)
+#There is missing data.
+#The Ozone variable is most likely to be the (Y) variable
+```
+**Task 2**
+```{r}
+air2 <- drop_na(air)
+#there are 6 columns and 111 row remaining in the new dataset
+```
+**Task 3**
+```{r}
+ggpairs(air2)
+
+ggcorr(air2, label = TRUE)
+#The strongest correlation with the ozone variable is temperature.
+#The weakest correlation with the ozone variable is day
+```
+*Task 4**
+```{r}
+ggplot(air2, aes(x = Temp, y = Ozone))+
+geom_point(alpha = 0.1)
+#we can see that there is a positive linear relationship between Temp and Ozone.
+```
+**Task 5**
+```{r}
+air2_simpleLR = lm(Ozone ~ Temp, air2)
+summary(air2_simpleLR)
+#This is a good quality model, as the R value is .4833 and the predictor variable is significant.
+
+#The model shows that the variable is between approx 67.28 to 71.45
+air2_simpleLR = recipe(Ozone ~ Temp, air2)
+air2_simpleLR
+
+
+air2_model <- linear_reg() %>%
+set_engine("lm")
+
+air2_workflow =
+workflow() %>%
+add_model(air2_model) %>%
+add_recipe(air2_simpleLR)
+air2_fit = fit(air2_workflow, air2)
+confint(air2_fit$fit$fit$fit)
+summary(air2_simpleLR)
+```
+**Task 6**
+```{r}
+ggplot(air2, aes(x = Temp, y = Ozone))+
+geom_point(alpha = 0.1)+
+geom_smooth(method = "lm", se = FALSE)
+```
+**Task 7**
+```{r}
+air2_simpleLR = recipe(Ozone ~ Temp, air2)
+air2_simpleLR
+
+
+air2_model <- linear_reg() %>%
+set_engine("lm")
+
+air2_workflow =
+workflow() %>%
+add_model(air2_model) %>%
+add_recipe(air2_simpleLR)
+air2_fit = fit(air2_workflow, air2)
+confint(air2_fit$fit$fit$fit)
+```
+**Task 8**
+```{r}
+summary(air2_fit)
+```
+

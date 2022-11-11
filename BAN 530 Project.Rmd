@@ -1,0 +1,18 @@
+---
+title: "BAN 530 Project"
+author: "Zackery Bradley"
+date: "3/18/2022"
+output: word_document
+---
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(readr)
+city_day <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN 530/Week 1/city_day.csv")
+View(city_day)
+city_hour <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN 530/Week 1/city_hour.csv")
+station_day <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN 530/Week 1/station_day.csv")
+station_hour <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN 530/Week 1/station_hour.csv")
+stations <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN 530/Week 1/stations.csv")
+```
+

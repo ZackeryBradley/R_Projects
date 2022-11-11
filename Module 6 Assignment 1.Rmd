@@ -1,0 +1,201 @@
+---
+title: "Module 6 Assignment 1"
+author: "Zackery Bradley"
+date: "9/21/2021"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(naniar)
+library(ggplot2)
+trucks = trucks <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 6/trucks.csv")
+
+```
+library(tidyverse)
+library(tidymodels)
+library(naniar)
+trucks = trucks <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 6/trucks.csv")
+
+
+**Task 1**
+```{r}
+
+str(trucks)
+summary(trucks)
+vis_miss(trucks)
+
+ggplot(trucks, aes(x = Distance, y = Speeding, color = Speeding))+
+geom_point()
+```
+  There seems to be somewhat of a natural cluster in Drivers, as once the traveling distance exceeds around 150 miles, drivers are more inclined to speed.
+
+**Task 2**
+```{r}
+trucks_cleaned = scale(trucks)
+summary(trucks_cleaned)
+trucks_cleaned = trucks %>% select(-Driver_ID)
+```
+```{r}
+kmeans_recipe = recipe(~ Distance + Speeding, trucks_cleaned) 
+
+trucks_dummy = kmeans_recipe %>% 
+  step_scale(all_numeric()) %>%
+  step_center(all_numeric()) 
+
+trucks_dummy = prep(trucks_dummy, trucks) 
+
+trucks_cleaned = bake(trucks_dummy, trucks)
+```
+**Task 3**
+```{r}
+set.seed(64)
+clusts = 
+  tibble(k = 2) %>%
+  mutate(
+    kclust = map(k, ~kmeans(trucks_cleaned, .x)),
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, trucks_cleaned)
+  )
+
+clusts
+```
+```{r}
+clusters = 
+  clusts %>%
+  unnest(cols = c(tidied))
+
+assignments = 
+  clusts %>% 
+  unnest(cols = c(augmented))
+
+clusterings = 
+  clusts %>%
+  unnest(cols = c(glanced))
+```
+**plots**
+```{r}
+p1 = 
+  ggplot(assignments, aes(x = Distance, y = Speeding)) +
+  geom_point(aes(color = .cluster), alpha = 0.8) + 
+  facet_wrap(~ k)
+p1
+```
+The cluster shown seems to be pretty natural. There is one possible outlier at around a distance of .75. Longer distance typically generates a higher probability of speeding.
+
+**Task 4**
+```{r}
+set.seed(412)
+clusts = 
+  tibble(k = 1:8) %>%
+  mutate(
+    kclust = map(k, ~kmeans(trucks_cleaned, .x)),
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, trucks_cleaned)
+  )
+
+clusts
+
+clusters = 
+  clusts %>%
+  unnest(cols = c(tidied))
+
+assignments = 
+  clusts %>% 
+  unnest(cols = c(augmented))
+
+clusterings = 
+  clusts %>%
+  unnest(cols = c(glanced))
+
+p2 = 
+  ggplot(assignments, aes(x = Distance, y = Speeding)) +
+  geom_point(aes(color = .cluster), alpha = 0.8) + 
+  facet_wrap(~ k)
+p2
+
+
+
+
+```
+**Task 5**
+```{r}
+
+trucks_scaled = scale(trucks) 
+summary(trucks_scaled)
+```
+
+
+*Create relevant objects** 
+```{r}
+clusters =
+  clusts %>%
+  unnest(cols = c(tidied))
+
+assignments = 
+  clusts %>% 
+  unnest(cols = c(augmented))
+
+clusterings = 
+  clusts %>%
+  unnest(cols = c(glanced))
+```
+
+```{r}
+ggplot(clusterings, aes(k, tot.withinss)) +
+  geom_line() +
+  geom_point() + theme_bw()
+
+```
+Cluster 4 appears to be the best.
+
+**Task 6**
+```{r}
+set.seed(64)
+clusts = 
+  tibble(k = 4) %>%
+  mutate(
+    kclust = map(k, ~kmeans(trucks_cleaned, .x)),
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, trucks_cleaned)
+  )
+
+clusts
+```
+```{r}
+clusters = 
+  clusts %>%
+  unnest(cols = c(tidied))
+
+assignments = 
+  clusts %>% 
+  unnest(cols = c(augmented))
+
+clusterings = 
+  clusts %>%
+  unnest(cols = c(glanced))
+```
+**plots**
+```{r}
+p3 = 
+  ggplot(assignments, aes(x = Distance, y = Speeding)) +
+  geom_point(aes(color = .cluster), alpha = 0.8) + 
+  facet_wrap(~ k)
+p3
+```
+```
+Given the optimal cluster, the majority of drivers in cluster 4 maintain safe speeds on long distances.
+
+
+

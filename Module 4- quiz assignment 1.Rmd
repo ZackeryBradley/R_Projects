@@ -1,0 +1,58 @@
+---
+title: "Mod 4 assignment 1"
+author: "Zackery Bradley"
+date: "9/10/2021"
+output: word_document
+---
+
+**Packages**
+```{r}
+library(tidyverse)
+library(VIM)
+library(mice)
+install.packages('Rcpp')
+library(Rcpp)
+class_grades <- read_csv("C:/Users/bradl/OneDrive/Desktop/BAN502/Module 4/class-grades.csv")
+```
+**Task 1**
+```{r}
+
+vim_plot = aggr(class_grades, numbers = TRUE, prop = c(TRUE, FALSE),cex.axis=.7)
+ 
+```
+The variables that are missing data include "tutorial", "midterm", "takehome" and "final"
+**Task 2**
+```{r}
+vim_plot = aggr(class_grades, numbers = TRUE, prop = c(TRUE, FALSE),cex.axis=.7)
+```
+Student 1 is missing both midterm and takehome.
+**Task 3**
+```{r}
+classgrades_rowdel = class_grades %>% drop_na() 
+
+```
+89 rows remain.
+**Task 4**
+```{r}
+classgrades_coldel = class_grades %>% select(Prefix, Assignment) 
+vim_plot = aggr(classgrades_coldel, numbers = TRUE, prop = c(TRUE, FALSE),cex.axis=.7)
+skim(classgrades_coldel)
+
+```
+**Task 5**
+I believe task 3 seems more preferable, as task 4 will delete whole columns, the code on task 4 only deletes those mssing rows.
+**Task6**
+```{r}
+set.seed(123)
+classgrades_imp = mice(class_grades, m=5, method='pmm', printFlag=FALSE)
+summary(classgrades_imp) 
+classgrades_complete = complete(classgrades_imp) 
+summary(classgrades_complete)
+
+
+
+
+```
+
+
+

@@ -1,0 +1,89 @@
+---
+title: "MOd3Assignment1_Bradley"
+author: "Zackery Bradley"
+date: "9/7/2021"
+output: word_document
+---
+
+**Packages**
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(GGally)
+library(glmnet)
+library(readr)
+library(ggcorrplot)
+library(MASS)
+library(car)
+library(lubridate)
+library(lmtest)
+bike_cleaned_2 <- read_csv("bike_cleaned-2.csv")
+```
+library(tidyverse)
+library(tidymodels)
+library(GGally)
+library(glmnet)
+library(readr)
+library(ggcorrplot)
+library(MASS)
+library(car)
+library(lubridate)
+library(lmtest)
+bike_cleaned_2 <- read_csv("bike_cleaned-2.csv")
+
+**conversions**
+```{r}
+bike = bike_cleaned_2 %>% mutate(dteday =mdy(dteday)) 
+bike = bike %>% mutate(season = as_factor(season))
+bike = bike %>% mutate(mnth = as_factor(mnth))
+bike = bike %>% mutate(holiday = as_factor(holiday))
+bike = bike %>% mutate(weekday = as_factor(weekday))
+bike = bike %>% mutate(workingday = as_factor(workingday))
+bike = bike %>% mutate(weathersit = as_factor(weathersit))
+bike = bike %>% mutate(hr= as_factor(hr))
+```
+**Task 1**
+```{r}
+set.seed(1234)
+bike_split  = initial_split(bike_cleaned_2, prob = .70, strata = count)
+train = training(bike_split)
+test = testing(bike_split)
+
+```
+
+**Task 2**
+There are 4,347 rows in the test split, and 13,032 rows in the train split.
+
+
+**Task 3**
+```{r}
+
+bike_recipe = recipe(count~season + mnth + hr + holiday + weekday + temp + weathersit, train)
+
+bike_model=
+linear_reg() %>%
+set_engine("lm")
+bike_wflow =
+workflow() %>%
+add_model(bike_model) %>%
+add_recipe(bike_recipe)
+bike_fit=
+fit(bike_wflow,train)
+summary(bike_fit$fit$fit$fit)
+
+```
+the adjusted R squared value of .3231 shows a very weak correlation on the model.
+
+**Task 4**
+```{r}
+predict_train <- bike_fit %>% predict(test) %>%
+bind_cols(test) %>%
+metrics(truth = count, estimate = .pred)
+
+predict_train$count
+ggplot(data = predict_train,aes((.estimate))) +
+geom_histogram()
+```
+
+**task 5**
+The test set r squared value of .3185 compared to the models performance on the training set value of .3231 shows the data is not overly fitted.

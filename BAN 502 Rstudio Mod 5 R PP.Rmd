@@ -1,0 +1,76 @@
+---
+title: "BAN 502 PowerPoint"
+author: "Zackery Bradley"
+date: "9/17/2021"
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
+  powerpoint_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+**Packages**
+```{r}
+library(flexdashboard)
+library(tidyverse)
+library(ggplot2)
+library(tidymodels)
+library(vip)
+train_fit = readRDS("train_fit.rds")
+test = readRDS("test.rds")
+train = readRDS("train.rds")
+ student_split = readRDS("student_split.rds")
+student = readRDS("student.rds")
+```
+library(flexdashboard)
+library(tidyverse)
+library(ggplot2)
+library(tidymodels)
+train_fit = readRDS("train_fit.rds")
+rsconnect::deployApp('path/to/your/app')
+**Glimpse**
+```{r}
+glimpse(train)
+```
+
+
+**Slide 1**
+Title" A Market Evaluation of homes in Ames Iowa
+Representation by: Zackery Bradley
+
+**Important factors in home values**
+```{r slide 2}
+
+train_fit %>% pull_workflow_fit() %>% vip(geom = "point")
+
+```
+
+
+## Slide 3 with Bullets
+
+- From our market analysis, this chart serves as a representation of what variables drive the market price of homes in Ames, Iowa. 
+- we can see that the most important factors in home pricing is square footage, year built, and the number of cars that can be stored in the garage
+- Below is further analysis pinpointing these three factors' importance in our target market. 
+
+## Slide with R Output
+
+```{r slide 4}
+ggplot(train, aes(x = Gr_Liv_Area, y = Above_Median)) + geom_boxplot()+ggtitle("Ames Iowa Homes")
+```
+
+## Slide with Plot
+
+```{r slide 5}
+ggplot(train, aes(x = Garage_Cars , fill = Above_Median)) + geom_bar(position = "fill")+ggtitle("Ames Iowa Homes")
+```
+
+```{r slide 6}
+ggplot(train, aes(x = Year_Built, y = Above_Median)) + geom_boxplot()+ggtitle("Ames Iowa Homes")
+```
+**Suggestions for our targets (slide 7)**
+-We should focus on building new homes rather than renovating existing ones
+-The bigger, the better! Lets focus on designing our homes to have the least "wasted space" available, thus maximizing our square footage
+-We should prioritize having more garage space than our competitors 
+
